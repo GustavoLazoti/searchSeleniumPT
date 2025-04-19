@@ -20,6 +20,12 @@ def clicar_letra(driver, letra, timeout=10):
 def main():
     driver = webdriver.Chrome()
     try:
+        # Caminho para o chromedriver.exe
+        caminho_chromedriver = r'C:\caminho\para\chromedriver.exe'  # Altere para o caminho correto
+
+        # Crie o Service e passe para o Chrome
+        service = Service(executable_path=caminho_chromedriver)
+        driver = webdriver.Chrome(service=service)
         driver.get("URL_DA_PAGINA_DO_INDICE_DE_CURSOS")
         clicar_letra(driver, 'B')
         input("Pressione Enter para sair...")
