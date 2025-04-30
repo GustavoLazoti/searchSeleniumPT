@@ -75,49 +75,50 @@ def pagina_nao_encontrada(driver, timeout=3):
 
 
 def main():
-    caminho_chromedriver = r'C:/Users/pedro/Downloads/chrome/chromedriver-win64/chromedriver.exe'  # Altere para o caminho correto
+    caminho_chromedriver = r'C:/Users/Gustavo/Downloads/chromedriver-win64/chromedriver.exe'  # Altere para o caminho correto
     service = Service(executable_path=caminho_chromedriver)
     driver = webdriver.Chrome(service=service)
     cont = 0
     try:
         base_url = "https://www.dges.gov.pt/guias/detcursopi.asp?codc={}&code={}"
-        
-            
-            
+        arquivo_csv = "dados.csv"
+        cabecalho = ['Código Faculdade', 'Código Curso', 'Provas de ingresso', 'Nota candidatura', 'Pontos provas de ingresso', 'Média do secundário', 'Provas de ingresso']
+        primeira_vez = True
+
         for cod_faculdade in COD_FACULDADE:
-                for cod_curso in COD_CURSOS:
-                    url = base_url.format(cod_curso, cod_faculdade)
-                    driver.get(url)
-                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-                    if pagina_nao_encontrada(driver):continue
-                    provas, minimos, formula = extrair_blocos(driver)
-                    print(provas)
-                    print(minimos)
-                    print(formula)
+            for cod_curso in COD_CURSOS:
+                url = base_url.format(cod_curso, cod_faculdade)
+                driver.get(url)
+                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                if pagina_nao_encontrada(driver): continue
+                provas, minimos, formula = extrair_blocos(driver)
+                print(provas)
+                print(minimos)
+                print(formula)
 
-                    provas = provas.replace("\n", " ").replace("  ", " ").strip()
-                    minimos_valor = re.search(r"(\d+\s*pontos)", minimos)
-                    minimos_valor = minimos_valor.group(1) if minimos_valor else ""
-                    formula_valor = re.search(r"(\d+%)", formula)
-                    formula_valor = formula_valor.group(1) if formula_valor else ""
-                        
-                
-                    linha = [
-                        provas,
-                        minimos_valor,
-                        minimos_valor,
-                        formula_valor,
-                        formula_valor
-                    ]
-                    print(linha)
-                    with open("dados.csv", mode="w", newline="", encoding="utf-8") as arquivo:
-                        escritor = csv.writer(arquivo, delimiter=";")
-                        cabecalho = ['Provas de ingresso', 'Nota candidatura', 'Pontos provas de ingresso', 'Média do secundário', 'Provas de ingresso']
+                provas = provas.replace("\n", " ").replace("  ", " ").strip()
+                minimos_valor = re.search(r"(\d+\s*pontos)", minimos)
+                minimos_valor = minimos_valor.group(1) if minimos_valor else ""
+                formula_valor = re.search(r"(\d+%)", formula)
+                formula_valor = formula_valor.group(1) if formula_valor else ""
+                linha = [
+                    cod_faculdade,
+                    cod_curso,
+                    provas,
+                    minimos_valor,
+                    minimos_valor,
+                    formula_valor,
+                    formula_valor
+                ]
+                print(linha)
+                # Escreve o cabeçalho só na primeira vez, depois só adiciona linhas
+                with open(arquivo_csv, mode="a", newline="", encoding="utf-8") as arquivo:
+                    escritor = csv.writer(arquivo, delimiter=";")
+                    if primeira_vez:
                         escritor.writerow(cabecalho)
-                        escritor.writerow(linha)
-                    
+                        primeira_vez = False
+                    escritor.writerow(linha)
 
-                    input("Pressione Enter para sair...")
     finally:
         driver.quit()
 main()
