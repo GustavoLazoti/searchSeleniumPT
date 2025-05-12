@@ -58,6 +58,28 @@ def extrair_blocos(driver):
         blocos.append(bloco)
     return tuple(blocos)
 
+def extrair_ultimo_valor_nota_ultimo_colocado(driver):
+    """
+    Retorna o valor mais à direita da linha 'Nota de Candidatura do Último Colocado pelo Contingente Geral'
+    da tabela de dados de anos anteriores. Retorna "" se não encontrar.
+    """
+    html = driver.page_source
+    soup = BeautifulSoup(html, "html.parser")
+    tabela = soup.find("table", summary="Dados de anos anteriores")
+    if not tabela:
+        return ""
+    linhas = tabela.find_all("tr")
+    for linha in linhas:
+        th = linha.find("th")
+        if th and "Nota de Candidatura do Último Colocado pelo Contingente Geral" in th.get_text(strip=True):
+            celulas = linha.find_all("td")
+            # Percorre da direita para a esquerda, ignora células vazias
+            for celula in reversed(celulas):
+                texto = celula.get_text(strip=True)
+                if texto:
+                    return texto
+    return ""
+
 def pagina_nao_encontrada(driver, timeout=3):
     """
     Verifica se a página contém a mensagem de par instituição/curso não encontrado.
