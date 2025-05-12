@@ -58,6 +58,71 @@ def extrair_blocos(driver):
         blocos.append(bloco)
     return tuple(blocos)
 
+def extrair_cabecalho_maior(driver):
+    """
+    Retorna o cabeçalho maior (ano) correspondente ao valor mais à direita da linha
+    'Nota de Candidatura do Último Colocado pelo Contingente Geral'.
+    Exemplo de retorno: '2024'
+    """
+    html = driver.page_source
+    soup = BeautifulSoup(html, "html.parser")
+    tabela = soup.find("table", summary="Dados de anos anteriores")
+    if not tabela:
+        return ""
+    linhas = tabela.find_all("tr")
+    # Encontra a linha dos anos (normalmente a segunda linha de <tr> com <th colspan>)
+    for linha in linhas:
+        ths = linha.find_all("th")
+        if ths and all(th.get("colspan") for th in ths if th.get("colspan")):
+            cabecalhos_ano = []
+            for th in ths:
+                for _ in range(int(th.get("colspan", 1))):
+                    cabecalhos_ano.append(th.get_text(strip=True))
+            break
+    else:
+        return ""
+    # Agora encontra a linha de interesse e o índice do valor mais à direita
+    for linha in linhas:
+        th = linha.find("th")
+        if th and "Nota de Candidatura do Último Colocado pelo Contingente Geral" in th.get_text(strip=True):
+            celulas = linha.find_all("td")
+            for idx in range(len(celulas)-1, -1, -1):
+                texto = celulas[idx].get_text(strip=True)
+                if texto:
+                    return cabecalhos_ano[idx]
+    return ""
+
+def extrair_cabecalho_exato(driver):
+    """
+    Retorna o cabeçalho exato (fase) correspondente ao valor mais à direita da linha
+    'Nota de Candidatura do Último Colocado pelo Contingente Geral'.
+    Exemplo de retorno: '2ª Fase'
+    """
+    html = driver.page_source
+    soup = BeautifulSoup(html, "html.parser")
+    tabela = soup.find("table", summary="Dados de anos anteriores")
+    if not tabela:
+        return ""
+    linhas = tabela.find_all("tr")
+    # Encontra a linha das fases (normalmente a terceira linha de <tr> com <td>)
+    for linha in linhas:
+        tds = linha.find_all("td")
+        if tds and all("Fase" in td.get_text() for td in tds if td.get_text()):
+            cabecalhos_fase = [td.get_text(strip=True) for td in tds]
+            break
+    else:
+        return ""
+    # Agora encontra a linha de interesse e o índice do valor mais à direita
+    for linha in linhas:
+        th = linha.find("th")
+        if th and "Nota de Candidatura do Último Colocado pelo Contingente Geral" in th.get_text(strip=True):
+            celulas = linha.find_all("td")
+            for idx in range(len(celulas)-1, -1, -1):
+                texto = celulas[idx].get_text(strip=True)
+                if texto:
+                    return cabecalhos_fase[idx]
+    return ""
+
 def extrair_ultimo_valor_nota_ultimo_colocado(driver):
     """
     Retorna o valor mais à direita da linha 'Nota de Candidatura do Último Colocado pelo Contingente Geral'
